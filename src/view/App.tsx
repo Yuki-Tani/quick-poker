@@ -1,8 +1,11 @@
-import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { Connection } from '../model/Connection';
 
 function App() {
+  new Connection().connectAsync()
+    .then((isConnected) => prompt(`${isConnected ? "Connected!" : "Failed connection"}`))
+    .catch(() => prompt("Unexpected Error."));
   return (
     <div className="App">
       <header className="App-header">

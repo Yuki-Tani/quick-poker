@@ -34,6 +34,7 @@ export class Connection {
         await fetch(`${this.apiBaseUrl}/api/${this.messageApiEndPoint}`, {
             method: 'POST',
             body: JSON.stringify(messageJson),
+            mode: 'cors',
         });
     }
 
