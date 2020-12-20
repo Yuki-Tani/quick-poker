@@ -5,14 +5,16 @@ export class Connection {
     private readonly messageApiEndPoint = "messages";
     private readonly connection: HubConnection;
     private isReady = false;
+    private readonly listeners: Set<RecieveEventListener>;
 
     public constructor() {
         this.connection = new HubConnectionBuilder()
             .withUrl(`${this.apiBaseUrl}/api`)
             .configureLogging(LogLevel.Information)
             .build();
-        this.connection.on('newMessage', this.onRecieve);
+        this.connection.on('newMessage', this.onRecieve.bind(this));
         this.connection.onclose(() => console.log('disconnected'));
+        this.listeners = new Set();
     }
 
     public async connectAsync(): Promise<boolean> {
@@ -30,15 +32,33 @@ export class Connection {
             });
     }
 
-    public async sendMessageAsync(messageJson: JSON): Promise<void> {
+    public async sendMessageAsync(message: string): Promise<void> {
+        if (!this.isReady) {
+            console.warn(`connection is not ready. cannot set this message: ${message}`);
+            return;
+        }
         await fetch(`${this.apiBaseUrl}/api/${this.messageApiEndPoint}`, {
             method: 'POST',
-            body: JSON.stringify(messageJson),
+            body: message,
             mode: 'cors',
         });
     }
 
-    public onRecieve(message: string): JSON {
-        return JSON.parse(message);
+    public AddRecieveListener(listener: RecieveEventListener) {
+        this.listeners.add(listener);
     }
+
+    public RemoveRecieveListener(listener: RecieveEventListener) {
+        this.listeners.delete(listener);
+    }
+
+    private onRecieve(message: string): void {
+        this.listeners.forEach(listener => {
+            listener.onRecieve(message);
+        });
+    }
+}
+
+export interface RecieveEventListener {
+    onRecieve(message: string): void;
 }
