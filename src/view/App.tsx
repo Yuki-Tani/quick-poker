@@ -14,12 +14,6 @@ export class App extends React.Component<{}, { pageId: PageId }>{
     this.connection = new Connection();
   }
 
-  public componentDidMount(): void {
-    this.connection.connectAsync()
-      .then((isConnected) => window.confirm(`${isConnected ? "Connected!" : "Failed connection"}`))
-      .catch(() => window.alert("Unexpected Error."));
-  }
-
   public translatePage(id: PageId) {
     this.setState<"pageId">({ pageId: id });
   }

@@ -20,6 +20,9 @@ export class Table extends React.Component<TableProps, TableStates> implements R
     }
 
     public componentDidMount(): void {
+        this.connection.connectAsync()
+            .then((isConnected) => window.confirm(`${isConnected ? "Connected!" : "Failed connection"}`))
+            .catch(() => window.alert("Unexpected Error."));
         this.connection.AddRecieveListener(this);
     }
 
