@@ -5,31 +5,32 @@ export class Connection {
     private readonly messageApiEndPoint = "messages";
     private readonly connection: HubConnection;
     private isReady = false;
-    private readonly listeners: Set<RecieveEventListener>;
+    private readonly listeners: Set<RecieveMessageEventListener>;
 
     public constructor() {
         this.connection = new HubConnectionBuilder()
             .withUrl(`${this.apiBaseUrl}/api`)
             .configureLogging(LogLevel.Information)
             .build();
+        
         this.connection.on('newMessage', this.onRecieve.bind(this));
         this.connection.onclose(() => console.log('disconnected'));
         this.listeners = new Set();
     }
 
-    public async connectAsync(): Promise<boolean> {
+    public async connectAsync(): Promise<void> {
         console.log('connecting...');
         return this.connection.start()
-            .then(() => {
+            .then(() => new Promise<void>((resolve, reject) => {
                 console.log("connected");
                 this.isReady = true;
-                return true;
-            })
-            .catch(() => {
-                console.log("disconnected.");
+                resolve();
+            }))
+            .catch(() => new Promise<void>((resolve, reject) => {
+                console.log("connection failed.");
                 this.isReady = false;
-                return false;
-            });
+                reject();
+            }));
     }
 
     public async sendMessageAsync(message: string): Promise<void> {
@@ -44,21 +45,21 @@ export class Connection {
         });
     }
 
-    public AddRecieveListener(listener: RecieveEventListener) {
+    public AddRecieveListener(listener: RecieveMessageEventListener) {
         this.listeners.add(listener);
     }
 
-    public RemoveRecieveListener(listener: RecieveEventListener) {
+    public RemoveRecieveListener(listener: RecieveMessageEventListener) {
         this.listeners.delete(listener);
     }
 
-    private onRecieve(message: string): void {
+    public onRecieve(message: any): void {
         this.listeners.forEach(listener => {
-            listener.onRecieve(message);
+            listener.onRecieveMessage(message);
         });
     }
 }
 
-export interface RecieveEventListener {
-    onRecieve(message: string): void;
+export interface RecieveMessageEventListener {
+    onRecieveMessage(message: any): void;
 }
