@@ -3,30 +3,34 @@ import { actionIds } from "../model/Action";
 import { ActionLog } from "../model/ActionLog";
 import { Connection } from "../model/Connection";
 import { PageId, TranslatePage } from "../model/Page";
+import { Player } from "../model/Player";
+import { Table } from "../model/Table";
 import { User } from "../model/User";
+import { PlayerView } from "./PlayerView";
 
-export type TableProps = {
+export type TableViewProps = {
     connection: Connection;
     user: User;
     translate: TranslatePage;
 }
 
-export type TableStates = {
+export type TableViewStates = {
     input: string,
-    newMessage: string
+    players: Player[],
 }
 
-export class Table extends React.Component<TableProps, TableStates> {
+export class TableView extends React.Component<TableViewProps, TableViewStates> {
     private actionLog: ActionLog;
+    private table: Table;
 
-    constructor(props: TableProps) {
+    constructor(props: TableViewProps) {
         super(props);
-        this.state = { input: "", newMessage: "No Message" };
-        this.actionLog = new ActionLog(this.props.user);
+        this.state = { input: "", players: [] };
+        this.actionLog = new ActionLog(this.props.user, this.onActionLogUpdate.bind(this));
+        this.table = new Table(this.props.user, this.actionLog);
     }
 
     public componentDidMount(): void {
-        this.actionLog = new ActionLog(this.props.user);
         this.props.connection.connectAsync()
             .then(() => this.onConnectSuccess())
             .catch(() => this.onConnectFail())
@@ -58,6 +62,10 @@ export class Table extends React.Component<TableProps, TableStates> {
             .then(() => console.log("message sent."))
             .catch(() => console.error("could not send the message."));
     }
+
+    private onActionLogUpdate(): void {
+        this.setState<"players">({ players: this.table.players });
+    }
  
     public render(): ReactNode {
         return (
@@ -69,7 +77,11 @@ export class Table extends React.Component<TableProps, TableStates> {
                 </label>
                 <input type="button" value="Submit" onClick={this.onSubmit.bind(this)}/>
                 <div>
-                    {this.state.newMessage}
+                    <ul> {this.state.players.map(player => 
+                        <li key={player.playerId}>
+                            <PlayerView player={player}/> 
+                        </li>
+                    )} </ul>
                 </div>
             </div>
         );

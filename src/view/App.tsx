@@ -3,7 +3,7 @@ import { Connection } from '../model/Connection';
 import React, { ReactNode } from 'react';
 import { Entrance } from './Entrance';
 import { PageId } from '../model/Page';
-import { Table, TableProps, TableStates } from './Table';
+import { TableView } from './TableView';
 import { User } from '../model/User';
 
 export interface AppStates {
@@ -41,7 +41,7 @@ export class App extends React.Component<{}, AppStates>{
         );
       case PageId.Table :
         return (
-          <Table 
+          <TableView 
             connection={this.connection}
             user={this.user}
             translate={this.translatePage.bind(this)}

@@ -2,8 +2,11 @@ import { Action, ActionId, actionIds, ActionMessage, ActionMessageHandler, isMes
 import { RecieveMessageEventListener } from "./Connection";
 import { User } from "./User";
 
+export type ActionLogResetHandler = () => void;
+
 export class ActionLog implements RecieveMessageEventListener {
     private readonly actionMessageHandlers: Set<ActionMessageHandler<Action>>;
+    private readonly actionLogResetHandlers: Set<ActionLogResetHandler>;
     private log: ActionMessage<Action>[];
 
     get messages(): ActionMessage<Action>[] {
@@ -11,10 +14,12 @@ export class ActionLog implements RecieveMessageEventListener {
     }
 
     constructor(
-        private readonly user: User
+        private readonly user: User,
+        private readonly onActionLogUpdate: () => void,
     ){
         this.log = [];
         this.actionMessageHandlers = new Set();
+        this.actionLogResetHandlers = new Set();
         this.addActionMessageHandlerFor<ShareActionLogAction>(actionIds.shareActionLog, this.onAnyoneShareActionLog.bind(this));
         this.addActionMessageHandlerFor<JoinTableAction>(actionIds.joinTable, this.onAnyoneJoinTable.bind(this));
     }
@@ -25,6 +30,7 @@ export class ActionLog implements RecieveMessageEventListener {
         this.actionMessageHandlers.forEach(handler => {
             handler(message);
         });
+        this.onActionLogUpdate();
     }
 
     public addActionMessageHandlerFor<SpecificAction extends Action>(actionId: ActionId, handler: ActionMessageHandler<SpecificAction>) {
@@ -33,6 +39,14 @@ export class ActionLog implements RecieveMessageEventListener {
 
     public removeActionMessageHandlerFor<SpecificAction extends Action>(actionId: ActionId, handler: ActionMessageHandler<SpecificAction>) {
         this.actionMessageHandlers.delete(this.filterActionMessageHandlerFor<SpecificAction>(actionId, handler));
+    }
+
+    public addActionLogResetHandler(hander: ActionLogResetHandler): void {
+        this.actionLogResetHandlers.add(hander);
+    }
+
+    public removeActionLogResetHandler(hander: ActionLogResetHandler): void {
+        this.actionLogResetHandlers.delete(hander);
     }
 
     private filterActionMessageHandlerFor<SpecificAction extends Action>(actionId: ActionId, handler: ActionMessageHandler<SpecificAction>) {
@@ -45,7 +59,14 @@ export class ActionLog implements RecieveMessageEventListener {
 
     private onAnyoneShareActionLog(message: ActionMessage<ShareActionLogAction>): void {
         if (message.sharingUserId === this.user.id) {
-            this.log = message.actionLog;
+            console.log(`Log is been sharing by ${message.userId}`);
+            this.log = [];
+            this.actionLogResetHandlers.forEach(handler => {
+                handler();
+            });
+            message.actionLog.forEach(message => {
+                this.onRecieveMessage(message);
+            });
             console.log(`Log is shared by ${message.userId}`);
         }
     }
