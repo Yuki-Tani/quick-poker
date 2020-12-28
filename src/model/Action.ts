@@ -45,7 +45,7 @@ export interface AddStackAction {
 
 export interface ShuffleDeckAction {
     actionId: typeof actionIds.shuffleDeck;
-    deck: number;
+    deck: number[];
 }
 
 export interface FoldAction {
