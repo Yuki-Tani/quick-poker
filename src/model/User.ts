@@ -3,6 +3,8 @@ import { ActionLog } from "./ActionLog";
 import { Connection } from "./Connection";
 
 export class User {
+    private isSilent = false;
+
     constructor(
         public readonly id = "",
         private readonly connection: Connection,
@@ -36,6 +38,9 @@ export class User {
             console.warn("user id is not prepared.");
             return;
         }
+        if (this.isSilent) {
+            return;
+        }
         const message: ActionMessage<Action> = { userId: this.id, ...action };
         const messageText = JSON.stringify(message);
         this.connection.sendMessageAsync(messageText)
@@ -46,4 +51,8 @@ export class User {
     public isMessageMine(message: ActionMessage<Action>) {
         return message.userId === this.id;
     }
+
+    public setSilent(isSilent: boolean) {
+        this.isSilent = isSilent;
+    } 
 }

@@ -64,9 +64,11 @@ export class ActionLog implements RecieveMessageEventListener {
             this.actionLogResetHandlers.forEach(handler => {
                 handler();
             });
+            this.user.setSilent(true);
             message.actionLog.forEach(message => {
                 this.onRecieveMessage(message);
             });
+            this.user.setSilent(false);
             console.log(`Log is shared by ${message.userId}`);
         }
     }
