@@ -65,7 +65,7 @@ export class PlayerView extends React.Component<PlayerViewProps, PlayerViewState
                         <ul />
                 }
                 {
-                    this.props.player.isUnderControl ? 
+                    this.props.player.isUnderControl && this.props.player.isAction ? 
                         <div>
                             <input type="button" value="Fold" onClick={this.onFold.bind(this)}/>
                             <input type="button" value="Call" onClick={this.onCall.bind(this)} />
