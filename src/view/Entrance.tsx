@@ -31,7 +31,7 @@ export class Entrance extends React.Component<EntranceProps, EntranceStates> {
     public render(): ReactNode {
         return (
             <div id="entrance">
-                <label>User Name</label>
+                <label>User Name: </label>
                 <input type="text" value={this.state.userName} onChange={this.onChange.bind(this)}/>
                 <input type="button" value="Join Table" onClick={this.joinTable.bind(this)} />
             </div>

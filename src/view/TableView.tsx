@@ -15,7 +15,6 @@ export type TableViewProps = {
 }
 
 export type TableViewStates = {
-    input: string,
     players: Player[],
 }
 
@@ -25,7 +24,7 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
 
     constructor(props: TableViewProps) {
         super(props);
-        this.state = { input: "", players: [] };
+        this.state = { players: [] };
         this.actionLog = new ActionLog(this.props.user, this.updateTableView.bind(this));
         this.table = new Table(this.props.user, this.actionLog, this.updateTableView.bind(this));
     }
@@ -53,16 +52,6 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
         this.props.translate(PageId.Entrance);
     }
 
-    public onInputChange(event: React.ChangeEvent<HTMLInputElement>): void {
-        this.setState<"input">({input: event.target.value})
-    }
-    
-    public onSubmit(event: React.MouseEvent): void {
-        this.props.connection.sendMessageAsync(this.state.input)
-            .then(() => console.log("message sent."))
-            .catch(() => console.error("could not send the message."));
-    }
-
     private updateTableView(): void {
         this.setState<"players">({ players: this.table.players });
     }
@@ -71,11 +60,6 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
         return (
             <div id="table">
                 <h1>TABLE</h1>
-                <label>
-                    Name:
-                    <input type="text" value={this.state.input} onChange={this.onInputChange.bind(this)} />
-                </label>
-                <input type="button" value="Submit" onClick={this.onSubmit.bind(this)}/>
                 <div>
                     <ul> {this.state.players.map(player => 
                         <li key={player.playerId}>

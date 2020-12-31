@@ -26,7 +26,7 @@ export class Table {
     }
 
     private onAnyoneJoinTable(message: ActionMessage<JoinTableAction>): void {
-        this.waiters.push(new Player(message.userId));
+        this.waiters.push(new Player(message.userId, this.user.isMessageMine(message)));
         if (this.isMembersGathered()) {
             this.joinWaiters();
             if (this.user.isTableHost(this.log)) {
@@ -43,6 +43,7 @@ export class Table {
     }
 
     private onShuffleDeck(): void {
+        this.moveDealerButton();
         this.currentAction = this.dealerButtonPosition;
         // blind
         const sb = this.goNextAction();
@@ -67,7 +68,16 @@ export class Table {
     }
 
     private goNextAction(): Player {
+        this.players[this.currentAction].isAction = false;
         this.currentAction = (this.currentAction + 1) % this.players.length;
+        this.players[this.currentAction].isAction = true;
         return this.players[this.currentAction];
+    }
+
+    private moveDealerButton(): Player {
+        this.players[this.dealerButtonPosition].isDealer = false;
+        this.dealerButtonPosition = (this.dealerButtonPosition + 1) % this.players.length;
+        this.players[this.dealerButtonPosition].isDealer = true;
+        return this.players[this.dealerButtonPosition];
     }
 }
