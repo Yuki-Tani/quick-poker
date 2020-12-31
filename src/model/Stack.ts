@@ -11,7 +11,7 @@ export class Stack {
         return this.amount === 0;
     }
 
-    public addStack(additionalAmount: number): Stack {
+    public add(additionalAmount: number): Stack {
         return new Stack(this.amount + additionalAmount);
     }
 }

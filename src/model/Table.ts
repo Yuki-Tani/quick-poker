@@ -1,4 +1,4 @@
-import { actionIds, ActionMessage, JoinTableAction, ShuffleDeckAction } from "./Action";
+import { Action, actionIds, ActionMessage, BetAction, CallAction, FoldAction, JoinTableAction, ShuffleDeckAction } from "./Action";
 import { ActionLog } from "./ActionLog";
 import { Dealer } from "./Dealer";
 import { Player } from "./Player";
@@ -12,6 +12,7 @@ export class Table {
     public dealerButtonPosition = 0;
     public currentAction = 0;
     public currentBlind = new Blind(100);
+    public currentCall = this.currentBlind.amount;
 
     constructor(
         private readonly user: User,
@@ -23,6 +24,9 @@ export class Table {
         log.addActionLogResetHandler(this.onActionLogReset.bind(this));
         log.addActionMessageHandlerFor<JoinTableAction>(actionIds.joinTable, this.onAnyoneJoinTable.bind(this));
         log.addActionMessageHandlerFor<ShuffleDeckAction>(actionIds.shuffleDeck, this.onShuffleDeck.bind(this));
+        log.addActionMessageHandlerFor<FoldAction>(actionIds.fold, this.onFold.bind(this));
+        log.addActionMessageHandlerFor<CallAction>(actionIds.call, this.onCall.bind(this));
+        log.addActionMessageHandlerFor<BetAction>(actionIds.bet, this.onBet.bind(this));
     }
 
     private onAnyoneJoinTable(message: ActionMessage<JoinTableAction>): void {
@@ -44,16 +48,47 @@ export class Table {
 
     private onShuffleDeck(): void {
         this.moveDealerButton();
-        this.currentAction = this.dealerButtonPosition;
         // blind
-        const sb = this.goNextAction();
+        const sb = this.players[this.getIndexOf("SB")];
         console.log(`${sb.playerId} is betting a small blind.`);
         sb.betBlind(this.currentBlind.getSmallBlind());
-        const bb = this.goNextAction();
+        const bb = this.players[this.getIndexOf("BB")];
         console.log(`${bb.playerId} is betting a big blind.`);
         bb.betBlind(this.currentBlind);
+        this.currentCall = this.currentBlind.amount;
         // deal
         this.dealer.dealHandCards(this.players);
+        this.resetActivePlayersActionStatus();
+        this.currentAction = this.getIndexOf("UG");
+        this.players[this.currentAction].isAction = true;
+        this.onTableUpdate();
+    }
+
+    private onFold(message: ActionMessage<FoldAction>): void {
+        this.checkCurrentActionPlayer(message).fold();
+        const nextPlayer = this.goNextAction();
+        if (nextPlayer === "allActionCompleted") {
+            // TODO: win check
+            // TODO: next stage
+        } else if (this.checkWinner() !== "NotDecided") { // All fold, BB winner
+            // TODO: winner
+        }
+        this.onTableUpdate();
+    }
+
+    private onCall(message: ActionMessage<CallAction>): void { // call or check
+        this.checkCurrentActionPlayer(message).bet(this.currentCall);
+        const nextPlayer = this.goNextAction();
+        if (nextPlayer === "allActionCompleted") {
+            // TODO: next stage
+        }
+        this.onTableUpdate();
+    }
+
+    private onBet(message: ActionMessage<BetAction>): void {
+        this.resetActivePlayersActionStatus();
+        this.checkCurrentActionPlayer(message).bet(message.amount);
+        this.currentCall = message.amount;
         this.goNextAction();
         this.onTableUpdate();
     }
@@ -67,11 +102,25 @@ export class Table {
         this.waiters = [];
     }
 
-    private goNextAction(): Player {
+    private resetActivePlayersActionStatus(): void {
+        this.players.forEach(player => {
+            if (!player.isDown()) {
+                player.hasAlreadyAction = false;
+            }
+        });
+    }
+
+    private goNextAction(): Player | "allActionCompleted" {
         this.players[this.currentAction].isAction = false;
-        this.currentAction = (this.currentAction + 1) % this.players.length;
-        this.players[this.currentAction].isAction = true;
-        return this.players[this.currentAction];
+        for (let i = 1; i < this.players.length; i++) {
+            const targetIndex = (this.currentAction + i) % this.players.length;
+            if (!this.players[targetIndex].hasAlreadyAction) {
+                this.currentAction = targetIndex
+                this.players[targetIndex].isAction = true;
+                return this.players[targetIndex];
+            }
+        }        
+        return "allActionCompleted";
     }
 
     private moveDealerButton(): Player {
@@ -79,5 +128,37 @@ export class Table {
         this.dealerButtonPosition = (this.dealerButtonPosition + 1) % this.players.length;
         this.players[this.dealerButtonPosition].isDealer = true;
         return this.players[this.dealerButtonPosition];
+    }
+
+    private getIndexOf(position: "DB" | "SB" | "BB" | "UG"): number {
+        const relative = 
+            position === "DB" ? 0 :
+            position === "SB" ? 1 :
+            position === "BB" ? 2 :
+            position === "UG" ? 3 :
+            0;
+        return (this.dealerButtonPosition + relative) % this.players.length; 
+    }
+
+    private checkCurrentActionPlayer(message: ActionMessage<Action>): Player {
+        const player = this.players[this.currentAction];
+        if (message.userId !== player.playerId) {
+            throw new Error(`Current action is ${player.playerId}, but the action message is sent from ${message.userId}.`);
+        }
+        return player;
+    }
+
+    private checkWinner(): Player | "NotDecided" {
+        let winner: Player | undefined;
+        this.players.forEach(player => {
+            if (!player.isDown()) {
+                if (winner) {
+                    return "NotDecided";
+                } else {
+                    winner = player;
+                }
+            }
+        });
+        return winner ?? "NotDecided";
     }
 }

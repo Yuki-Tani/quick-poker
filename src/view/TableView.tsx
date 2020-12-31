@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import { actionIds } from "../model/Action";
 import { ActionLog } from "../model/ActionLog";
+import { Card } from "../model/Card";
 import { Connection } from "../model/Connection";
 import { PageId, TranslatePage } from "../model/Page";
 import { Player } from "../model/Player";
@@ -16,6 +17,7 @@ export type TableViewProps = {
 
 export type TableViewStates = {
     players: Player[],
+    flopCards: Card[]
 }
 
 export class TableView extends React.Component<TableViewProps, TableViewStates> {
@@ -24,7 +26,7 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
 
     constructor(props: TableViewProps) {
         super(props);
-        this.state = { players: [] };
+        this.state = { players: [], flopCards: [] };
         this.actionLog = new ActionLog(this.props.user, this.updateTableView.bind(this));
         this.table = new Table(this.props.user, this.actionLog, this.updateTableView.bind(this));
     }
@@ -54,6 +56,7 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
 
     private updateTableView(): void {
         this.setState<"players">({ players: this.table.players });
+        this.setState<"flopCards">({flopCards: []}) // TODO
     }
  
     public render(): ReactNode {
@@ -63,7 +66,7 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
                 <div>
                     <ul> {this.state.players.map(player => 
                         <li key={player.playerId}>
-                            <PlayerView player={player}/> 
+                            <PlayerView player={player} user={this.props.user}/> 
                         </li>
                     )} </ul>
                 </div>

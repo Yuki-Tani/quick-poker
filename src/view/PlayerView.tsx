@@ -1,14 +1,41 @@
 import React, { ReactNode } from "react";
 import { Player } from "../model/Player";
+import { User } from "../model/User";
 
 export type PlayerViewProps = {
+    user: User;
     player: Player;
 }
 
 export type PlayerViewStates = {
+    betAmount: number
 }
 
 export class PlayerView extends React.Component<PlayerViewProps, PlayerViewStates> {
+
+    constructor(props: PlayerViewProps) {
+        super(props);
+        this.state = {betAmount: 0};
+    }
+
+    private onFold(): void {
+        this.props.user.doAction({
+            actionId: "Fold",
+        });
+    }
+
+    private onCall(): void {
+        this.props.user.doAction({
+            actionId: "Call",
+        })
+    }
+
+    private onBet(): void {
+        this.props.user.doAction({
+            actionId: "Bet",
+            amount: this.state.betAmount,
+        })
+    }
 
     public render(): ReactNode {
         return (
@@ -20,7 +47,7 @@ export class PlayerView extends React.Component<PlayerViewProps, PlayerViewState
                     <li> Stack: ${this.props.player.stack.amount} </li>
                     {this.props.player.currentBet !== 0 ? 
                         <li> Bet: ${this.props.player.currentBet} </li> :
-                        <li/>
+                        <div/>
                     }
                 </ul>
                 {
@@ -36,6 +63,20 @@ export class PlayerView extends React.Component<PlayerViewProps, PlayerViewState
                         </ul>
                     :
                         <ul />
+                }
+                {
+                    this.props.player.isUnderControl ? 
+                        <div>
+                            <input type="button" value="Fold" onClick={this.onFold.bind(this)}/>
+                            <input type="button" value="Call" onClick={this.onCall.bind(this)} />
+                            <input type="button" value="Bet" onClick={this.onBet.bind(this)} />
+                            <input type="text" value={this.state.betAmount} onChange={event => {
+                                const amount = parseInt(event.target.value);
+                                this.setState<"betAmount">({betAmount: isNaN(amount) ? 0 : amount});
+                            }} />
+                        </div>
+                    :  
+                        <div />
                 }
             </div>
         );
