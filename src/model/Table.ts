@@ -86,6 +86,9 @@ export class Table {
     }
 
     private onBet(message: ActionMessage<BetAction>): void {
+        if (message.amount < this.currentCall) {
+            return;
+        }
         this.resetActivePlayersActionStatus();
         this.checkCurrentActionPlayer(message).bet(message.amount);
         this.currentCall = message.amount;

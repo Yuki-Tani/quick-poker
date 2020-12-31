@@ -69,7 +69,7 @@ export class PlayerView extends React.Component<PlayerViewProps, PlayerViewState
                         <div>
                             <input type="button" value="Fold" onClick={this.onFold.bind(this)}/>
                             <input type="button" value="Call" onClick={this.onCall.bind(this)} />
-                            <input type="button" value="Bet" onClick={this.onBet.bind(this)} />
+                            <input type="button" value="Raise" onClick={this.onBet.bind(this)} />
                             <input type="text" value={this.state.betAmount} onChange={event => {
                                 const amount = parseInt(event.target.value);
                                 this.setState<"betAmount">({betAmount: isNaN(amount) ? 0 : amount});
