@@ -1,5 +1,7 @@
 import { actionIds, ActionMessage, ShuffleDeckAction } from "./Action";
 import { ActionLog } from "./ActionLog";
+import { Card } from "./Card";
+import { CommunityCards, Round } from "./CommunityCards";
 import { Deck } from "./Deck";
 import { Player } from "./Player";
 import { User } from "./User";
@@ -32,8 +34,25 @@ export class Dealer {
             if (firstCard && secondCard) {
                 player.hand = [firstCard, secondCard];
             } else {
-                throw new Error("Deck has been already empty. Something wrong.");
+                throw new Error("Cannot deal cards. Deck has been already empty.");
             }
         });
+    }
+
+    public openCardsFor(communityCards: CommunityCards): void {
+        const round = communityCards.getRound();
+        const amount = 
+            round === "preflop" ? 3 :
+            round === "flop" ? 1 :
+            round === "turn" ? 1 : 0;
+
+        for(let i=0; i<amount; i++) {
+            const newCard = this.deck.draw();
+            if (newCard) {
+                communityCards.cards.push(newCard);
+            } else {
+                throw new Error("Cannot open cards. Deck has been already empty.");
+            }
+        }
     }
 }

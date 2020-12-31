@@ -1,5 +1,6 @@
 import { Action, actionIds, ActionMessage, BetAction, CallAction, FoldAction, JoinTableAction, ShuffleDeckAction } from "./Action";
 import { ActionLog } from "./ActionLog";
+import { CommunityCards } from "./CommunityCards";
 import { Dealer } from "./Dealer";
 import { Player } from "./Player";
 import { Blind } from "./Stack";
@@ -13,6 +14,7 @@ export class Table {
     public currentAction = 0;
     public currentBlind = new Blind(100);
     public currentCall = this.currentBlind.amount;
+    public communityCards = new CommunityCards();
 
     constructor(
         private readonly user: User,
@@ -59,7 +61,7 @@ export class Table {
         // deal
         this.dealer.dealHandCards(this.players);
         this.resetActivePlayersActionStatus();
-        this.currentAction = this.getIndexOf("UG");
+        this.currentAction = this.getIndexOf("UTG");
         this.players[this.currentAction].isAction = true;
         this.onTableUpdate();
     }
@@ -69,7 +71,7 @@ export class Table {
         const nextPlayer = this.goNextAction();
         if (nextPlayer === "allActionCompleted") {
             // TODO: win check
-            // TODO: next stage
+            this.goNextRound();
         } else if (this.checkWinner() !== "NotDecided") { // All fold, BB winner
             // TODO: winner
         }
@@ -80,7 +82,7 @@ export class Table {
         this.checkCurrentActionPlayer(message).bet(this.currentCall);
         const nextPlayer = this.goNextAction();
         if (nextPlayer === "allActionCompleted") {
-            // TODO: next stage
+            this.goNextRound();
         }
         this.onTableUpdate();
     }
@@ -126,6 +128,14 @@ export class Table {
         return "allActionCompleted";
     }
 
+    private goNextRound(): void {
+        this.dealer.openCardsFor(this.communityCards);
+        this.resetActivePlayersActionStatus();
+        this.currentAction = this.getIndexOf("BTN");
+        this.goNextAction();
+        this.onTableUpdate();
+    }
+
     private moveDealerButton(): Player {
         this.players[this.dealerButtonPosition].isDealer = false;
         this.dealerButtonPosition = (this.dealerButtonPosition + 1) % this.players.length;
@@ -133,12 +143,12 @@ export class Table {
         return this.players[this.dealerButtonPosition];
     }
 
-    private getIndexOf(position: "DB" | "SB" | "BB" | "UG"): number {
+    private getIndexOf(position: "BTN" | "SB" | "BB" | "UTG"): number {
         const relative = 
-            position === "DB" ? 0 :
+            position === "BTN" ? 0 :
             position === "SB" ? 1 :
             position === "BB" ? 2 :
-            position === "UG" ? 3 :
+            position === "UTG" ? 3 :
             0;
         return (this.dealerButtonPosition + relative) % this.players.length; 
     }
