@@ -21,12 +21,12 @@ export class Connection {
     public async connectAsync(): Promise<void> {
         console.log('connecting...');
         return this.connection.start()
-            .then(() => new Promise<void>((resolve, reject) => {
+            .then(() => new Promise<void>((resolve, _) => {
                 console.log("connected");
                 this.isReady = true;
                 resolve();
             }))
-            .catch(() => new Promise<void>((resolve, reject) => {
+            .catch(() => new Promise<void>((_, reject) => {
                 console.log("connection failed.");
                 this.isReady = false;
                 reject();

@@ -1,4 +1,4 @@
-import { actionIds, ActionMessage, JoinTableAction, ShuffleDeckAction } from "./Action";
+import { actionIds, ActionMessage, ShuffleDeckAction } from "./Action";
 import { ActionLog } from "./ActionLog";
 import { Deck } from "./Deck";
 import { Player } from "./Player";
@@ -24,7 +24,8 @@ export class Dealer {
         this.deck = new Deck(message.deck);
     }
 
-    private dealHandCards(players: Player[]): void {
+    public dealHandCards(players: Player[]): void {
+        console.log("Dealer : deal hands");
         players.forEach(player => {
             const firstCard = this.deck.draw();
             const secondCard = this.deck.draw();

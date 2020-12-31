@@ -26,8 +26,8 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
     constructor(props: TableViewProps) {
         super(props);
         this.state = { input: "", players: [] };
-        this.actionLog = new ActionLog(this.props.user, this.onActionLogUpdate.bind(this));
-        this.table = new Table(this.props.user, this.actionLog);
+        this.actionLog = new ActionLog(this.props.user, this.updateTableView.bind(this));
+        this.table = new Table(this.props.user, this.actionLog, this.updateTableView.bind(this));
     }
 
     public componentDidMount(): void {
@@ -63,7 +63,7 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
             .catch(() => console.error("could not send the message."));
     }
 
-    private onActionLogUpdate(): void {
+    private updateTableView(): void {
         this.setState<"players">({ players: this.table.players });
     }
  

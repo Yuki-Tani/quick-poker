@@ -10,10 +10,6 @@ export type PlayerViewStates = {
 
 export class PlayerView extends React.Component<PlayerViewProps, PlayerViewStates> {
 
-    constructor(props: PlayerViewProps) {
-        super(props);
-    }
-
     public render(): ReactNode {
         return (
             <div id="player">

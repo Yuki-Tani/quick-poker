@@ -6,7 +6,7 @@ export class Deck {
 
     public static createShuffledDeck(amount: number) {
         const usedDeckAmount = Math.ceil(amount / Card.kindAmount);
-        const newDeck = new Array(usedDeckAmount * Card.kindAmount);
+        const newDeck = Array.from(Array(usedDeckAmount * Card.kindAmount).keys());
         for (var i = newDeck.length - 1; i >= 0; i--) {
             const target = Math.floor(Math.random() * (i + 1));
             [newDeck[target], newDeck[i]] = [newDeck[i], newDeck[target]];

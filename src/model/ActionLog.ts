@@ -8,6 +8,8 @@ export class ActionLog implements RecieveMessageEventListener {
     private readonly actionMessageHandlers: Set<ActionMessageHandler<Action>>;
     private readonly actionLogResetHandlers: Set<ActionLogResetHandler>;
     private log: ActionMessage<Action>[];
+    private logProcessing = false;
+    private processingIndex = 0;
 
     get messages(): ActionMessage<Action>[] {
         return this.log;
@@ -26,11 +28,19 @@ export class ActionLog implements RecieveMessageEventListener {
 
     public onRecieveMessage(message: ActionMessage<Action>): void {
         this.messages.push(message);
-        console.log(`${message.userId} : ${message.actionId}`);
-        this.actionMessageHandlers.forEach(handler => {
-            handler(message);
-        });
-        this.onActionLogUpdate();
+        if (!this.logProcessing) {
+            this.logProcessing = true;
+            while (this.processingIndex < this.log.length) {
+                const processingMessage = this.messages[this.processingIndex];
+                this.processingIndex ++ // this should be first for a processing when reseting.
+                console.log(`${processingMessage.userId} : ${processingMessage.actionId}`);
+                 this.actionMessageHandlers.forEach(handler => {
+                    handler(processingMessage);
+                });
+                this.onActionLogUpdate();
+            }
+            this.logProcessing = false; // Future: this sync procedure is not perfect.            
+        }
     }
 
     public addActionMessageHandlerFor<SpecificAction extends Action>(actionId: ActionId, handler: ActionMessageHandler<SpecificAction>) {
@@ -61,6 +71,7 @@ export class ActionLog implements RecieveMessageEventListener {
         if (message.sharingUserId === this.user.id) {
             console.log(`Log is been sharing by ${message.userId}`);
             this.log = [];
+            this.processingIndex = 0;
             this.actionLogResetHandlers.forEach(handler => {
                 handler();
             });
