@@ -3,6 +3,7 @@ import { ActionLog } from "./ActionLog";
 import { CommunityCards } from "./CommunityCards";
 import { Dealer } from "./Dealer";
 import { Player } from "./Player";
+import { Pot } from "./Pot";
 import { Blind } from "./Stack";
 import { User } from "./User";
 
@@ -15,6 +16,7 @@ export class Table {
     public currentBlind = new Blind(100);
     public currentCall = this.currentBlind.amount;
     public communityCards = new CommunityCards();
+    public pot = new Pot(0, []);
 
     constructor(
         private readonly user: User,
@@ -50,6 +52,7 @@ export class Table {
 
     private onShuffleDeck(): void {
         this.moveDealerButton();
+        this.pot = new Pot(0, this.players);
         // blind
         const sb = this.players[this.getIndexOf("SB")];
         console.log(`${sb.playerId} is betting a small blind.`);
@@ -70,10 +73,17 @@ export class Table {
         this.checkCurrentActionPlayer(message).fold();
         const nextPlayer = this.goNextAction();
         if (nextPlayer === "allActionCompleted") {
-            // TODO: win check
-            this.goNextRound();
+            this.pot = this.pot.makeNewPot();
+            if (this.communityCards.isAllCardsOpen() || this.pot.isBetCompleted()) {
+                this.pot.distribute(this.communityCards);
+                this.pot = new Pot(0, []);
+            } else {
+                this.goNextRound();
+            } 
         } else if (this.checkWinner() !== "NotDecided") { // All fold, BB winner
-            // TODO: winner
+            this.pot = this.pot.makeNewPot();
+            this.pot.distribute(this.communityCards);
+            this.pot = new Pot(0, []);
         }
         this.onTableUpdate();
     }
@@ -82,13 +92,19 @@ export class Table {
         this.checkCurrentActionPlayer(message).bet(this.currentCall);
         const nextPlayer = this.goNextAction();
         if (nextPlayer === "allActionCompleted") {
-            this.goNextRound();
+            this.pot = this.pot.makeNewPot();
+            if (this.communityCards.isAllCardsOpen()) {
+                this.pot.distribute(this.communityCards);
+                this.pot = new Pot(0, []);
+            } else {
+                this.goNextRound();
+            }
         }
         this.onTableUpdate();
     }
 
     private onBet(message: ActionMessage<BetAction>): void {
-        if (message.amount < this.currentCall) {
+        if (message.amount <= this.currentCall) {
             return;
         }
         this.resetActivePlayersActionStatus();
@@ -129,9 +145,11 @@ export class Table {
     }
 
     private goNextRound(): void {
+        // open
         this.dealer.openCardsFor(this.communityCards);
         this.resetActivePlayersActionStatus();
         this.currentAction = this.getIndexOf("BTN");
+        this.currentCall = 0;
         this.goNextAction();
         this.onTableUpdate();
     }

@@ -5,6 +5,7 @@ import { CommunityCards } from "../model/CommunityCards";
 import { Connection } from "../model/Connection";
 import { PageId, TranslatePage } from "../model/Page";
 import { Player } from "../model/Player";
+import { Pot } from "../model/Pot";
 import { Table } from "../model/Table";
 import { User } from "../model/User";
 import { PlayerView } from "./PlayerView";
@@ -18,6 +19,7 @@ export type TableViewProps = {
 export type TableViewStates = {
     players: Player[],
     communityCards: CommunityCards;
+    pot: Pot;
 }
 
 export class TableView extends React.Component<TableViewProps, TableViewStates> {
@@ -26,7 +28,7 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
 
     constructor(props: TableViewProps) {
         super(props);
-        this.state = { players: [], communityCards: new CommunityCards() };
+        this.state = { players: [], communityCards: new CommunityCards(), pot: new Pot(0, []) };
         this.actionLog = new ActionLog(this.props.user, this.updateTableView.bind(this));
         this.table = new Table(this.props.user, this.actionLog, this.updateTableView.bind(this));
     }
@@ -57,6 +59,7 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
     private updateTableView(): void {
         this.setState<"players">({ players: this.table.players });
         this.setState<"communityCards">({communityCards: this.table.communityCards});
+        this.setState<"pot">({pot: this.table.pot})
     }
  
     public render(): ReactNode {
@@ -68,6 +71,9 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
                     </li>
                 )}
                 </ul>
+                <div>
+                    pot: ${this.state.pot.amount}
+                </div>
                 <div>
                     <ul> {this.state.players.map(player => 
                         <li key={player.playerId}>

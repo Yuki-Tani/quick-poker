@@ -12,6 +12,8 @@ export const ranks = [
 ] as const;
 export type Rank = typeof ranks[number];
 
+export const comparableRank = (rank: Rank) => (rank + 11) % 13;
+
 export class Card {
     public static readonly kindAmount = suits.length * ranks.length;
     public readonly suit: Suit;

@@ -19,4 +19,8 @@ export class CommunityCards {
             default: throw new Error(`there is invalid ${this.cards.length} community cards.`)
         }
     }
+
+    public isAllCardsOpen(): boolean {
+        return this.getRound() === "river";
+    }
 }

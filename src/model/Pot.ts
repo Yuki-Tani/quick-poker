@@ -1,3 +1,5 @@
+import { CommunityCards } from "./CommunityCards";
+import { Hand, WeakestHand } from "./Hand";
 import { Player } from "./Player";
 
 export class Pot {
@@ -10,14 +12,16 @@ export class Pot {
     }
 
     public makeNewPot(): Pot {
+
         if (this.sidePot) {
-            return new Pot(this.amount, this.activePlayers, this.sidePot.makeNewPot());
+            const newActivePlayers = this.activePlayers.filter(player => !player.isDown())
+            return new Pot(this.amount, newActivePlayers, this.sidePot.makeNewPot());
         }
 
         let smallestBet = Number.MAX_VALUE;
         this.activePlayers.forEach(player => {
             if (!player.isDown()) {
-                Math.min(smallestBet, player.currentBet);
+                smallestBet = Math.min(smallestBet, player.currentBet);
             }
         });
         let newAmount = this.amount;
@@ -43,5 +47,30 @@ export class Pot {
         } else {
             return new Pot(newAmount, newActivePlayers);
         }
+    }
+
+    public isBetCompleted(): boolean {
+        if (this.sidePot) {
+            return this.sidePot.isBetCompleted();
+        }
+        return this.activePlayers.length === 1;
+    }
+
+    public distribute(communityCards: CommunityCards): void {
+        this.sidePot?.distribute(communityCards);
+        let distributedPlayers: Player[] = [];
+        let strongestHand: Hand = new WeakestHand();
+        this.activePlayers.forEach(player => {
+            const hand = Hand.judgeHand([...communityCards.cards, ...player.hand]);
+            if (hand.isStrongerThan(strongestHand)) {
+                strongestHand = hand;
+                distributedPlayers = [player];
+            } else if (!strongestHand.isStrongerThan(hand)) { // draw
+                distributedPlayers.push(player);
+            }
+        });
+        distributedPlayers.forEach(player => {
+            player.stack = player.stack.add(this.amount / distributedPlayers.length);
+        });
     }
 }
