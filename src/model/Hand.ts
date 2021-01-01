@@ -76,7 +76,7 @@ export abstract class Hand {
         if (highCardRanks) {
             return new HighCard(highCardRanks[0], highCardRanks[1], highCardRanks[2], highCardRanks[3], highCardRanks[4]);
         }
-        throw new Error("Judge hand logic is invalid.");
+        return new WeakestHand();
     }
 
     public abstract handRank: number;

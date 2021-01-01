@@ -5,6 +5,7 @@ import { User } from "../model/User";
 export type PlayerViewProps = {
     user: User;
     player: Player;
+    currentCall: number;
 }
 
 export type PlayerViewStates = {
@@ -38,6 +39,7 @@ export class PlayerView extends React.Component<PlayerViewProps, PlayerViewState
     }
 
     public render(): ReactNode {
+        const callLabel = this.props.currentCall === this.props.player.currentBet  ? "Check" : `Call ${this.props.currentCall}`;
         return (
             <div id="player">
                 <p style={
@@ -68,7 +70,7 @@ export class PlayerView extends React.Component<PlayerViewProps, PlayerViewState
                     this.props.player.isUnderControl && this.props.player.isAction ? 
                         <div>
                             <input type="button" value="Fold" onClick={this.onFold.bind(this)}/>
-                            <input type="button" value="Call" onClick={this.onCall.bind(this)} />
+                            <input type="button" value={callLabel} onClick={this.onCall.bind(this)} />
                             <input type="button" value="Raise" onClick={this.onBet.bind(this)} />
                             <input type="text" value={this.state.betAmount} onChange={event => {
                                 const amount = parseInt(event.target.value);

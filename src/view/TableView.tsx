@@ -77,7 +77,7 @@ export class TableView extends React.Component<TableViewProps, TableViewStates> 
                 <div>
                     <ul> {this.state.players.map(player => 
                         <li key={player.playerId}>
-                            <PlayerView player={player} user={this.props.user}/> 
+                            <PlayerView player={player} user={this.props.user} currentCall={this.table.currentCall}/> 
                         </li>
                     )} </ul>
                 </div>

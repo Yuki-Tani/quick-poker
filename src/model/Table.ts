@@ -8,7 +8,7 @@ import { Blind } from "./Stack";
 import { User } from "./User";
 
 export class Table {
-    public readonly dealer;
+    public readonly dealer: Dealer;
     public players: Player[] = [];
     public waiters: Player[] = [];
     public dealerButtonPosition = 0;
@@ -51,7 +51,6 @@ export class Table {
     }
 
     private onShuffleDeck(): void {
-        this.moveDealerButton();
         this.pot = new Pot(0, this.players);
         // blind
         const sb = this.players[this.getIndexOf("SB")];
@@ -75,15 +74,13 @@ export class Table {
         if (nextPlayer === "allActionCompleted") {
             this.pot = this.pot.makeNewPot();
             if (this.communityCards.isAllCardsOpen() || this.pot.isBetCompleted()) {
-                this.pot.distribute(this.communityCards);
-                this.pot = new Pot(0, []);
+                this.completeRounds();
             } else {
                 this.goNextRound();
             } 
         } else if (this.checkWinner() !== "NotDecided") { // All fold, BB winner
             this.pot = this.pot.makeNewPot();
-            this.pot.distribute(this.communityCards);
-            this.pot = new Pot(0, []);
+            this.completeRounds();
         }
         this.onTableUpdate();
     }
@@ -94,8 +91,7 @@ export class Table {
         if (nextPlayer === "allActionCompleted") {
             this.pot = this.pot.makeNewPot();
             if (this.communityCards.isAllCardsOpen()) {
-                this.pot.distribute(this.communityCards);
-                this.pot = new Pot(0, []);
+                this.completeRounds();
             } else {
                 this.goNextRound();
             }
@@ -152,6 +148,19 @@ export class Table {
         this.currentCall = 0;
         this.goNextAction();
         this.onTableUpdate();
+    }
+
+    private completeRounds(): void {
+        // result
+        this.pot.distribute(this.communityCards);
+        this.pot = new Pot(0, []);
+        // next game
+        this.communityCards.throwAway();
+        this.joinWaiters();
+        this.moveDealerButton();
+        if (this.user.isTableHost(this.log)) {
+            this.dealer.shuffleDeck(this.players.length);
+        }
     }
 
     private moveDealerButton(): Player {
