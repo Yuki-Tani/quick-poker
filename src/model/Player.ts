@@ -1,5 +1,4 @@
 import { Card } from "./Card";
-import { Pot } from "./Pot";
 import { Blind, Stack } from "./Stack";
 
 export class Player {
