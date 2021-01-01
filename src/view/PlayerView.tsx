@@ -6,6 +6,7 @@ export type PlayerViewProps = {
     user: User;
     player: Player;
     currentCall: number;
+    currentMinRaise: number;
 }
 
 export type PlayerViewStates = {
@@ -40,6 +41,7 @@ export class PlayerView extends React.Component<PlayerViewProps, PlayerViewState
 
     public render(): ReactNode {
         const callLabel = this.props.currentCall === this.props.player.currentBet  ? "Check" : `Call ${this.props.currentCall}`;
+        const raiseLabel = this.props.currentCall === 0 ? "Bet" : "Raise";
         return (
             <div id="player">
                 <p style={
@@ -71,11 +73,11 @@ export class PlayerView extends React.Component<PlayerViewProps, PlayerViewState
                         <div>
                             <input type="button" value="Fold" onClick={this.onFold.bind(this)}/>
                             <input type="button" value={callLabel} onClick={this.onCall.bind(this)} />
-                            <input type="button" value="Raise" onClick={this.onBet.bind(this)} />
+                            <input type="button" value={raiseLabel} onClick={this.onBet.bind(this)} />
                             <input type="text" value={this.state.betAmount} onChange={event => {
                                 const amount = parseInt(event.target.value);
                                 this.setState<"betAmount">({betAmount: isNaN(amount) ? 0 : amount});
-                            }} />
+                            }} style={this.state.betAmount < this.props.currentCall + this.props.currentMinRaise ? {color: "red"} : {color: "black"}}/>
                         </div>
                     :  
                         <div />

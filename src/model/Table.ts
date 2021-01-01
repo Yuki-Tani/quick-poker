@@ -15,6 +15,7 @@ export class Table {
     public currentAction = 0;
     public currentBlind = new Blind(100);
     public currentCall = this.currentBlind.amount;
+    public currentMinRaise = this.currentBlind.amount;
     public communityCards = new CommunityCards();
     public pot = new Pot(0, []);
 
@@ -60,6 +61,7 @@ export class Table {
         console.log(`${bb.playerId} is betting a big blind.`);
         bb.betBlind(this.currentBlind);
         this.currentCall = this.currentBlind.amount;
+        this.currentMinRaise = this.currentBlind.amount;
         // deal
         this.dealer.dealHandCards(this.players);
         this.resetActivePlayersActionStatus();
@@ -100,11 +102,12 @@ export class Table {
     }
 
     private onBet(message: ActionMessage<BetAction>): void {
-        if (message.amount <= this.currentCall) {
+        if (message.amount < this.currentCall + this.currentMinRaise) {
             return;
         }
         this.resetActivePlayersActionStatus();
         this.checkCurrentActionPlayer(message).bet(message.amount);
+        this.currentMinRaise = message.amount - this.currentCall;
         this.currentCall = message.amount;
         this.goNextAction();
         this.onTableUpdate();
@@ -146,6 +149,7 @@ export class Table {
         this.resetActivePlayersActionStatus();
         this.currentAction = this.getIndexOf("BTN");
         this.currentCall = 0;
+        this.currentMinRaise = this.currentBlind.amount;
         this.goNextAction();
         this.onTableUpdate();
     }
