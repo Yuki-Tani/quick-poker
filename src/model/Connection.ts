@@ -1,7 +1,7 @@
 import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signalr"
 
 export class Connection {
-    private readonly apiBase = "https://victorious-beach-0b75c5f00.azurestaticapps.net";
+    private readonly apiBase = "https://quick-poker.service.signalr.net";
     private readonly localApiBase = "http://localhost:7071"
     private readonly messageApiEndPoint = "messages";
     private readonly connection: HubConnection;
