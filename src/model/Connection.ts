@@ -1,15 +1,17 @@
 import { HubConnectionBuilder, HubConnection, LogLevel } from "@microsoft/signalr"
 
 export class Connection {
-    private readonly apiBaseUrl = "http://localhost:7071";
+    private readonly apiBase = "https://victorious-beach-0b75c5f00.azurestaticapps.net";
+    private readonly localApiBase = "http://localhost:7071"
     private readonly messageApiEndPoint = "messages";
     private readonly connection: HubConnection;
     private isReady = false;
     private readonly listeners: Set<RecieveMessageEventListener>;
 
     public constructor() {
+        const actualBaseUrl = window.location.host.startsWith("localhost") ? this.localApiBase : this.apiBase;
         this.connection = new HubConnectionBuilder()
-            .withUrl(`${this.apiBaseUrl}/api`)
+            .withUrl(`${actualBaseUrl}/api`)
             .configureLogging(LogLevel.Information)
             .build();
         
@@ -38,7 +40,7 @@ export class Connection {
             console.warn(`connection is not ready. cannot set this message: ${message}`);
             return;
         }
-        await fetch(`${this.apiBaseUrl}/api/${this.messageApiEndPoint}`, {
+        await fetch(`${this.connection.baseUrl}/${this.messageApiEndPoint}`, {
             method: 'POST',
             body: message,
             mode: 'cors',
